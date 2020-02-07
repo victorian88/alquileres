@@ -1,75 +1,111 @@
 import React, { useState } from "react";
-import { StyleSheet, View, Text, ScrollView } from "react-native";
+import { StyleSheet, View, Text, ScrollView, AppRegistry } from "react-native";
 import { Button, Input } from "react-native-elements";
-import DatepickerRange from "react-native-range-datepicker";
-
+import Calendar from "react-native-calendar-select";
+//import Dates from "react-native-dates";
+import moment from "moment";
 export default function addComentario(props) {
   const { navigation } = props;
   const { idRestaurant } = navigation.state.params;
   const [inquilino, setInquilino] = useState("");
-  const [fechaIni, setFechaini] = useState(new Date());
-  const [fechaFin, setFechafin] = useState(new Date());
+  const [fechaIni, setFechaini] = useState("");
+  const [fechaFin, setFechafin] = useState("");
   const [senia, setSenia] = useState("0.0");
   const [pago, setPago] = useState("0.0");
   const [numero, setNumero] = useState("");
 
+  confirmDate = ({ startDate, endDate, startMoment, endMoment }) => {
+    setFechaini(startDate), setFechafin(endDate);
+  };
+  openCalendar = () => {
+    this.calendar && this.calendar.open();
+  };
+  let customI18n = {
+    w: ["", "Mon", "Tues", "Wed", "Thur", "Fri", "Sat", "Sun"],
+    weekday: [
+      "",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    text: {
+      start: "Check in",
+      end: "Check out",
+      date: "Date",
+      save: "Confirm",
+      clear: "Reset"
+    },
+    date: "DD / MM" // date format
+  };
+  let color = {
+    subColor: "#f0f0f0"
+  };
   return (
-    //<View style={styles.viewBody}>
-    <ScrollView maximumZoomScale={0.5}>
-      <View style={styles.formComentario}>
-        <Input
-          style={styles.input}
-          label="Inquilino"
-          containerStyle={styles.input}
-          onChange={e => setInquilino(e.nativeEvent.text)}
-        />
-        <Input
-          style={styles.input}
-          label="Teléfono"
-          containerStyle={styles.input}
-          onChange={e => setIsetNumero(e.nativeEvent.text)}
-        />
-        <View style={{ flex: 0.5, height: 300 }}>
-          <DatepickerRange
-            placeHolderStart="Desde"
-            startDate="20200101"
-            untilDate="20200105"
-            infoStyle={{ fontSize: 8 }}
-            infoContainerStyle={{
-              marginRight: 20,
-              paddingHorizontal: 20,
-              paddingVertical: 5,
-              backgroundColor: "green",
-              borderRadius: 20,
-              alignSelf: "stretch"
-            }}
-            onConfirm={(startDate, untilDate) => (
-              setFechaini({ startDate }), setFechafin({ untilDate })
-            )}
+    <View style={styles.viewBody}>
+      <ScrollView>
+        <View style={styles.formComentario}>
+          <Input
+            style={styles.input}
+            label="Inquilino"
+            containerStyle={styles.input}
+            onChange={e => setInquilino(e.nativeEvent.text)}
           />
+          <Input
+            style={styles.input}
+            label="Teléfono"
+            containerStyle={styles.input}
+            onChange={e => setNumero(e.nativeEvent.text)}
+          />
+
+          <Input
+            label="Seña"
+            //placeholder="Seña"
+            value={senia}
+            keyboardType="numeric"
+            type="number"
+            containerStyle={styles.input}
+            onChange={e => setSenia(e.nativeEvent.text)}
+          />
+          <Input
+            label="Pago"
+            //placeholder="Seña"
+            value={pago}
+            keyboardType="numeric"
+            type="number"
+            containerStyle={styles.input}
+            onChange={e => setPago(e.nativeEvent.text)}
+          />
+          <Text>
+            {moment(fechaIni)
+              .format("DD/MM/YYYY")
+              .toString()}
+          </Text>
+          <Button title="Guardar" onPress={() => console.log(fechaIni)} />
         </View>
-        <Input
-          label="Seña"
-          //placeholder="Seña"
-          value={senia}
-          keyboardType="numeric"
-          type="number"
-          containerStyle={styles.input}
-          onChange={e => setSenia(e.nativeEvent.text)}
+
+        <Button title="Open Calendar" onPress={openCalendar} />
+        <Calendar
+          i18n="en"
+          ref={calendar => {
+            this.calendar = calendar;
+          }}
+          customI18n={customI18n}
+          color={color}
+          format="YYYYMMDD"
+          minDate="20170510"
+          maxDate="20180312"
+          startDate={fechaIni}
+          endDate={fechaFin}
+          onConfirm={({ startDate, endDate }) => {
+            setFechaini(startDate), setFechafin(endDate);
+          }}
         />
-        <Input
-          label="Pago"
-          //placeholder="Seña"
-          value={pago}
-          keyboardType="numeric"
-          type="number"
-          containerStyle={styles.input}
-          onChange={e => setPago(e.nativeEvent.text)}
-        />
-        <Button title="Guardar" onPress={() => console.log(fechaIni)} />
-      </View>
-    </ScrollView>
-    //  </View>
+      </ScrollView>
+    </View>
   );
 }
 
@@ -85,5 +121,16 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 2
+  },
+  container: {
+    flex: 1,
+    flexGrow: 1,
+    marginTop: 20
+  },
+  date: {
+    marginTop: 50
+  },
+  focused: {
+    color: "blue"
   }
 });
