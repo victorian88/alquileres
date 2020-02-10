@@ -5,7 +5,7 @@ import Calendar from "react-native-calendar-select";
 //import Dates from "react-native-dates";
 import moment from "moment";
 import Toast from "react-native-easy-toast";
-import Loading from "../components/loading";
+import Loading from "../components/Loading";
 import { firebaseApp } from "../utils/FireBase";
 import firebase from "firebase/app";
 import "firebase/firestore";
