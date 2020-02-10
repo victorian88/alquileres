@@ -1,45 +1,175 @@
-import React, { useState } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import React, { useState, useRef } from "react";
+import { StyleSheet, View, Text, ScrollView, AppRegistry } from "react-native";
 import { Button, Input } from "react-native-elements";
-import DatepickerRange from "react-native-range-datepicker";
-
+import Calendar from "react-native-calendar-select";
+//import Dates from "react-native-dates";
+import moment from "moment";
+import Toast from "react-native-easy-toast";
+import Loading from "../components/loading";
+import { firebaseApp } from "../utils/FireBase";
+import firebase from "firebase/app";
+import "firebase/firestore";
+const db = firebase.firestore(firebaseApp);
 export default function addComentario(props) {
   const { navigation } = props;
   const { idRestaurant } = navigation.state.params;
   const [inquilino, setInquilino] = useState("");
-  const [fechaIni, setFechaini] = useState(new Date());
-  const [fechaFin, setFechafin] = useState(new Date());
+  const [fechaIni, setFechaini] = useState("");
+  const [fechaFin, setFechafin] = useState("");
   const [senia, setSenia] = useState("0.0");
+  const [pago, setPago] = useState("0.0");
+  const [numero, setNumero] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const toastRef = useRef();
 
+  const addComentario = () => {
+    if (!inquilino) {
+      toastRef.current.show("Debe cargar inquilino");
+    } else if (!fechaIni || !fechaFin) {
+      toastRef.current.show("Debe cargar Fechas");
+    } else {
+      setIsLoading(true);
+      const user = firebase.auth.currentUser;
+      const payload = {
+        idRestaurant: idRestaurant,
+        inquilino: inquilino,
+        numero: numero,
+        senia: senia,
+        pago: pago,
+        fechaIni: fechaIni,
+        fechaFin: fechaFin,
+        createAt: new Date()
+      };
+      db.collection("reservas")
+        .add(payload)
+        .then(() => {
+          setIsLoading(false);
+          navigation.goBack();
+        })
+        .catch(() => {
+          toastRef.current.show("error al enviar la reserva");
+          setIsLoading(false);
+        });
+    }
+  };
+  confirmDate = ({ startDate, endDate, startMoment, endMoment }) => {
+    setFechaini(startDate), setFechafin(endDate);
+  };
+  openCalendar = () => {
+    this.calendar && this.calendar.open();
+  };
+  let customI18n = {
+    w: ["", "Mon", "Tues", "Wed", "Thur", "Fri", "Sat", "Sun"],
+    weekday: [
+      "",
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    text: {
+      start: "Check in",
+      end: "Check out",
+      date: "Date",
+      save: "Confirm",
+      clear: "Reset"
+    },
+    date: "DD / MM" // date format
+  };
+  let color = {
+    subColor: "#f0f0f0"
+  };
   return (
     <View style={styles.viewBody}>
-      <View style={styles.formComentario}>
-        <Input
-          placeholder="Inquilino"
-          containerStyle={styles.input}
-          onChange={e => setInquilino(e.nativeEvent.text)}
-        />
-        <DatepickerRange
-          placeHolderStart="Desde"
-          startDate="20200101"
-          untilDate="20200105"
-          infoStyle={{ fontSize: 8 }}
-          onConfirm={(startDate, untilDate) => (
-            setFechaini({ startDate }), setFechafin({ untilDate })
-          )}
-        />
+      <ScrollView>
+        <View style={styles.formComentario}>
+          <Input
+            style={styles.input}
+            label="Inquilino"
+            containerStyle={styles.input}
+            onChange={e => setInquilino(e.nativeEvent.text)}
+          />
+          <Input
+            style={styles.input}
+            label="Teléfono"
+            containerStyle={styles.input}
+            onChange={e => setNumero(e.nativeEvent.text)}
+          />
 
-        <Input
-          label="Seña"
-          //placeholder="Seña"
-          value={senia}
-          keyboardType="numeric"
-          type="number"
-          containerStyle={styles.input}
-          onChange={e => setSenia(e.nativeEvent.text)}
+          <Input
+            label="Seña"
+            //placeholder="Seña"
+            value={senia}
+            keyboardType="numeric"
+            type="number"
+            containerStyle={styles.input}
+            onChange={e => setSenia(e.nativeEvent.text)}
+          />
+          <Input
+            label="Pago"
+            //placeholder="Seña"
+            value={pago}
+            keyboardType="numeric"
+            type="number"
+            containerStyle={styles.input}
+            onChange={e => setPago(e.nativeEvent.text)}
+          />
+
+          <Button
+            style={{ marginBottom: 10 }}
+            title="Seleccionar Fecha"
+            onPress={openCalendar}
+          />
+          {fechaIni.length != 0 ? (
+            <Text
+              style={{
+                fontSize: 18,
+                color: "blue",
+                fontWeight: "bold",
+                marginBottom: 15
+              }}
+            >
+              {moment(fechaIni)
+                .format("DD/MM/YYYY")
+                .toString()}
+            </Text>
+          ) : (
+            <Text> </Text>
+          )}
+          <Button
+            style={{ marginTop: 10 }}
+            title="Guardar"
+            onPress={addComentario}
+          />
+        </View>
+
+        <Calendar
+          i18n="en"
+          ref={calendar => {
+            this.calendar = calendar;
+          }}
+          customI18n={customI18n}
+          color={color}
+          format="YYYYMMDD"
+          minDate="20170510"
+          maxDate="20180312"
+          startDate={fechaIni}
+          endDate={fechaFin}
+          onConfirm={({ startDate, endDate }) => {
+            setFechaini(startDate), setFechafin(endDate);
+          }}
         />
-        <Button title="Guardar" onPress={() => console.log(fechaIni)} />
-      </View>
+      </ScrollView>
+      <Toast
+        ref={toastRef}
+        //  position="center"
+        positionValue={300}
+        opacity={0.5}
+      />
+      <Loading isVisible={isLoading} text="Guardando Reserva" />
     </View>
   );
 }
@@ -50,11 +180,22 @@ const styles = StyleSheet.create({
   },
   formComentario: {
     margin: 10,
-    marginTop: 40,
-    flex: 1,
+    marginTop: 5,
+    //flex: 1,
     alignItems: "center"
   },
   input: {
-    marginBottom: 10
+    marginBottom: 2
+  },
+  container: {
+    flex: 1,
+    flexGrow: 1,
+    marginTop: 20
+  },
+  date: {
+    marginTop: 50
+  },
+  focused: {
+    color: "blue"
   }
 });
