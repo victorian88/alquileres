@@ -5,23 +5,79 @@ import { Calendar, CalendarList, Agenda } from "react-native-calendars";
 import { firebaseApp } from "../utils/FireBase";
 import firebase from "firebase/app";
 import "firebase/firestore";
+import moment from "moment";
 const db = firebase.firestore(firebaseApp);
 export default function Reservas(props) {
   const { navigation, idRestaurant } = props;
   const [comentarios, setComentarios] = useState([]);
+  const [m, setM] = useState("");
   const [recargarComentario, setRecargarComentario] = useState(false);
+  const getDateForCalendar = date => {
+    const dt = new Date(date);
+    const yr = dt.getFullYear();
+    const month = `${dt.getMonth() + 1 < 10 ? 0 : ""}${dt.getMonth() + 1}`;
+    const d = `${dt.getDate() < 10 ? 0 : ""}${dt.getDate()}`;
+    // console.log(`${yr}-${month}-${d}`);
+    return `${yr}-${month}-${d}`;
+  };
+  const getAllDatesBetween = (fromDate, toDate) => {
+    let curDate = fromDate;
+
+    const datesForCalendar = {};
+    datesForCalendar[getDateForCalendar(fromDate)] = {
+      startingDay: true,
+      color: "#FD2F40",
+      textColor: "white"
+    };
+
+    while (moment(curDate) < moment(toDate)) {
+      // if (curDate === fromDate) {
+      curDate = new Date(curDate);
+      //}
+      curDate = new Date(curDate.setDate(curDate.getDate() + 1));
+      // console.log(curDate);
+      datesForCalendar[getDateForCalendar(curDate)] = {
+        color: "#969696",
+        textColor: "white"
+      };
+    }
+    datesForCalendar[getDateForCalendar(toDate)] = {
+      // selected: true,
+      endingDay: true,
+      color: "#FD2F40",
+      textColor: "white"
+    };
+
+    /*   console.log(
+      "[MANews][getAllDatesBetween]datesForCalendar",
+      JSON.stringify(datesForCalendar)
+    ); */
+
+    return datesForCalendar;
+  };
   useEffect(() => {
     (async () => {
       const resultComentarios = [];
+      let fi = "";
+      let ff = "";
+      let m = "";
+      let m2 = "";
       db.collection("reservas")
         .where("idRestaurant", "==", idRestaurant)
         .get()
         .then(response => {
           response.forEach(doc => {
             resultComentarios.push(doc.data());
+            fi = doc.data().fechaIni;
+            fi = new Date(fi.seconds * 1000);
+            ff = doc.data().fechaFin;
+            ff = new Date(ff.seconds * 1000);
+            m = getAllDatesBetween(fi, ff);
           });
 
+          setM(m);
           setComentarios(resultComentarios);
+          console.log(m);
         });
 
       setRecargarComentario(false);
@@ -94,37 +150,47 @@ export default function Reservas(props) {
         disableArrowLeft={true}
         // Disable right arrow. Default = false
         disableArrowRight={true}
-        // Collection of dates that have to be colored in a special way. Default = {}
-        markedDates={{
-          "2020-02-20": { textColor: "green" },
-          "2020-02-22": { startingDay: true, color: "green" },
-          "2020-02-23": {
-            selected: true,
-            endingDay: true,
-            color: "green",
-            textColor: "gray"
-          },
-          "2020-02-04": {
-            disabled: true,
-            startingDay: true,
-            color: "green",
-            endingDay: true
-          }
-        }}
-        // Date marking style [simple/period/multi-dot/custom]. Default = 'simple'
         markingType={"period"}
+        // Collection of dates that have to be colored in a special way. Default = {}
+        markedDates={m}
+        //  markedDates={getAllDatesBetween("2020-02-18", "2020-02-20")}
+        // Date marking style [simple/period/multi-dot/custom]. Default = 'simple'
       />
     </View>
   );
 }
 
 function FunctComentario(props) {
-  const { inquilino,fechaIni,fechaFin,senia,pago } = props.comentario.item;
-const fechaDesde = new Date(fechaIni.seconds * 1000);
-const fechaHasta = new Date(fechaFin.seconds * 1000);
+  const {
+    inquilino,
+    fechaIni,
+    fechaFin,
+    senia,
+    pago,
+    numero,
+    comentario
+  } = props.comentario.item;
+  const fechaDesde = new Date(fechaIni.seconds * 1000);
+  const fechaHasta = new Date(fechaFin.seconds * 1000);
   return (
+    <View style={styles.viewReview}>
+      <View style={styles.viewInfo}>
+        <Text style={styles.fecha}>
+          {fechaDesde.getDate()}/{fechaDesde.getMonth() + 1}/
+          {fechaDesde.getFullYear()} -- {fechaHasta.getDate()}/
+          {fechaHasta.getMonth() + 1}/{fechaHasta.getFullYear()}
+        </Text>
+        <Text style={styles.senia}>
+          Seña: ${senia} ***** Pago: $ {pago}
+        </Text>
 
-    
+        <Text style={styles.coment}>{comentario}</Text>
+      </View>
+      <View style={styles.viewInfo2}>
+        <Text style={styles.inquilino}>{inquilino}</Text>
+        <Text style={styles.pago}> Tel: {numero}</Text>
+      </View>
+    </View>
   );
 }
 const styles = StyleSheet.create({
@@ -133,5 +199,42 @@ const styles = StyleSheet.create({
   },
   btnTitleAddComentario: {
     color: "#00a680"
+  },
+  viewReview: {
+    flexDirection: "row",
+    margin: 10,
+    paddingBottom: 10,
+    borderBottomColor: "#e3e3e3",
+    borderBottomWidth: 1
+  },
+  viewInfo: {
+    //flexDirection: "row",
+    flex: 1,
+    alignItems: "center"
+  },
+  viewInfo2: {
+    flexDirection: "column",
+    flex: 1,
+    alignItems: "center"
+  },
+  inquilino: {
+    fontWeight: "bold",
+    paddingLeft: 5
+  },
+  senia: {
+    // fontWeight: "bold",
+    paddingLeft: 5
+  },
+  fecha: {
+    fontWeight: "bold",
+    color: "red"
+  },
+  comentario: {
+    // fontWeight: "bold",
+    alignItems: "center"
+  },
+  coment: {
+    paddingLeft: 5,
+    color: "grey"
   }
 });
