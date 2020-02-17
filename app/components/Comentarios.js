@@ -10,7 +10,7 @@ const db = firebase.firestore(firebaseApp);
 export default function Reservas(props) {
   const { navigation, idRestaurant } = props;
   const [comentarios, setComentarios] = useState([]);
-  const [m, setM] = useState("");
+  const [m, setM] = useState({});
   const [recargarComentario, setRecargarComentario] = useState(false);
   const getDateForCalendar = date => {
     const dt = new Date(date);
@@ -60,8 +60,9 @@ export default function Reservas(props) {
       const resultComentarios = [];
       let fi = "";
       let ff = "";
-      let m = "";
-      let m2 = "";
+      const m2 = [];
+      let i = 0;
+      let m3 = {};
       db.collection("reservas")
         .where("idRestaurant", "==", idRestaurant)
         .get()
@@ -72,12 +73,19 @@ export default function Reservas(props) {
             fi = new Date(fi.seconds * 1000);
             ff = doc.data().fechaFin;
             ff = new Date(ff.seconds * 1000);
-            m = getAllDatesBetween(fi, ff);
+            m2[i] = getAllDatesBetween(fi, ff);
+            m2[i] = JSON.stringify(m2[i]);
+            m2[i] = m2[i].slice(1, -1);
+            //  m2[i] = m2[i].slice(2, -2);
+            // m3 += m2[i];
+            i++;
           });
+          m3 = m2.join();
+          m3 = "{" + m3 + "}";
+          setM(JSON.parse(m3));
+          console.log(m3);
 
-          setM(m);
           setComentarios(resultComentarios);
-          console.log(m);
         });
 
       setRecargarComentario(false);
@@ -183,7 +191,6 @@ function FunctComentario(props) {
         <Text style={styles.senia}>
           Seña: ${senia} ***** Pago: $ {pago}
         </Text>
-
         <Text style={styles.coment}>{comentario}</Text>
       </View>
       <View style={styles.viewInfo2}>
@@ -202,15 +209,17 @@ const styles = StyleSheet.create({
   },
   viewReview: {
     flexDirection: "row",
-    margin: 10,
-    paddingBottom: 10,
+    margin: 5,
+    paddingBottom: -1,
     borderBottomColor: "#e3e3e3",
-    borderBottomWidth: 1
+    borderBottomWidth: 1,
+    marginBottom: 1
   },
   viewInfo: {
     //flexDirection: "row",
     flex: 1,
-    alignItems: "center"
+    alignItems: "center",
+    marginBottom: -1
   },
   viewInfo2: {
     flexDirection: "column",
@@ -235,6 +244,7 @@ const styles = StyleSheet.create({
   },
   coment: {
     paddingLeft: 5,
+    paddingBottom: -1,
     color: "grey"
   }
 });
