@@ -14,11 +14,12 @@ export default function addComentario(props) {
   const { navigation } = props;
   const { idRestaurant } = navigation.state.params;
   const [inquilino, setInquilino] = useState("");
-  const [fechaIni, setFechaini] = useState("");
+  const [fechaIni, setFechaini] = useState(new Date());
   const [fechaFin, setFechafin] = useState("");
   const [senia, setSenia] = useState("0.0");
   const [pago, setPago] = useState("0.0");
   const [numero, setNumero] = useState("");
+  const [comentario, setComentario] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const toastRef = useRef();
 
@@ -38,6 +39,7 @@ export default function addComentario(props) {
         pago: pago,
         fechaIni: fechaIni,
         fechaFin: fechaFin,
+        comentario: comentario,
         createAt: new Date()
       };
       db.collection("reservas")
@@ -117,6 +119,13 @@ export default function addComentario(props) {
             containerStyle={styles.input}
             onChange={e => setPago(e.nativeEvent.text)}
           />
+          <Input
+            //  style={styles.comentario}
+            label="Comentario"
+            multiline={true}
+            containerStyle={styles.input}
+            onChange={e => setComentario(e.nativeEvent.text)}
+          />
 
           <Button
             style={{ marginBottom: 10 }}
@@ -154,8 +163,8 @@ export default function addComentario(props) {
           customI18n={customI18n}
           color={color}
           format="YYYYMMDD"
-          minDate="20170510"
-          maxDate="20180312"
+          minDate="20200201"
+          maxDate="20400312"
           startDate={fechaIni}
           endDate={fechaFin}
           onConfirm={({ startDate, endDate }) => {
