@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { StyleSheet, View, Text, ScrollView, AppRegistry } from "react-native";
 import { Button, Input } from "react-native-elements";
 import Calendar from "react-native-calendar-select";
@@ -6,6 +6,9 @@ import Calendar from "react-native-calendar-select";
 import moment from "moment";
 import Toast from "react-native-easy-toast";
 import Loading from "../components/Loading";
+import { Notifications } from "expo";
+import * as Permissions from "expo-permissions";
+import Constants from "expo-constants";
 import { firebaseApp } from "../utils/FireBase";
 import firebase from "firebase/app";
 import "firebase/firestore";
@@ -22,7 +25,26 @@ export default function addComentario(props) {
   const [comentario, setComentario] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const toastRef = useRef();
+  const localNotification = { title: "done", body: "done!" };
+  const handleNotification = () => {
+    console.warn("ok! got your notif");
+  };
 
+  const askNotification = async () => {
+    // We need to ask for Notification permissions for ios devices
+    const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+    if (Constants.isDevice && status === "granted")
+      console.log("Notification permissions granted.");
+  };
+
+  useEffect(() => {
+    askNotification();
+    // If we want to do something with the notification when the app
+    // is active, we need to listen to notification events and
+    // handle them in a callback
+    const listener = Notifications.addListener(handleNotification);
+    return () => listener.remove();
+  }, []);
   const addComentario = () => {
     if (!inquilino) {
       toastRef.current.show("Debe cargar inquilino");
@@ -42,6 +64,18 @@ export default function addComentario(props) {
         comentario: comentario,
         createAt: new Date()
       };
+
+      //Keyboard.dismiss();
+      const schedulingOptions = {
+        time: new Date().getTime() + Number(20000)
+      };
+      // Notifications show only when app is not active.
+      // (ie. another app being used or device's screen is locked)
+      Notifications.scheduleLocalNotificationAsync(
+        localNotification,
+        schedulingOptions
+      );
+
       db.collection("reservas")
         .add(payload)
         .then(() => {
