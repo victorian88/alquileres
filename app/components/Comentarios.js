@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { StyleSheet, View, Text, FlatList } from "react-native";
+import {
+  StyleSheet,
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity
+} from "react-native";
 import { Button } from "react-native-elements";
 import { Calendar, CalendarList, Agenda } from "react-native-calendars";
 import { firebaseApp } from "../utils/FireBase";
+import TimerNotification from "../components/Notification";
 import firebase from "firebase/app";
 import "firebase/firestore";
 import moment from "moment";
@@ -10,8 +17,10 @@ const db = firebase.firestore(firebaseApp);
 export default function Reservas(props) {
   const { navigation, idRestaurant } = props;
   const [comentarios, setComentarios] = useState([]);
+  const [idC, setIdC] = useState("");
   const [m, setM] = useState({});
   const [recargarComentario, setRecargarComentario] = useState(false);
+  const [isReloadComentario, setReloadComentario] = useState(false);
   const getDateForCalendar = date => {
     const dt = new Date(date);
     const yr = dt.getFullYear();
@@ -71,6 +80,12 @@ export default function Reservas(props) {
             resultComentarios.push(doc.data());
             fi = doc.data().fechaIni;
             fi = new Date(fi.seconds * 1000);
+            resultComentarios.id = doc.id;
+            idR = doc.idRestaurant;
+            inquilino = doc.data().inquilino;
+            numero = doc.numero;
+            pago = doc.pago;
+            senia = doc.senia;
             ff = doc.data().fechaFin;
             ff = new Date(ff.seconds * 1000);
             m2[i] = getAllDatesBetween(fi, ff);
@@ -83,42 +98,77 @@ export default function Reservas(props) {
           m3 = m2.join();
           m3 = "{" + m3 + "}";
           setM(JSON.parse(m3));
-          console.log(m3);
+          // console.log(m3);
 
           setComentarios(resultComentarios);
         });
-
-      setRecargarComentario(false);
     })();
+    setRecargarComentario(false);
   }, [recargarComentario]);
   return (
     <View>
       <FlatList
         data={comentarios}
-        renderItem={comentario => <FunctComentario comentario={comentario} />}
+        renderItem={comentario => (
+          <TouchableOpacity
+            onPress={() =>
+              //console.log(comentario.item.inquilino)
+              navigation.navigate("EditAlquiler", {
+                variables: comentario.item,
+                setRecargarComentario: setRecargarComentario
+              })
+            }
+          >
+            <FunctComentario comentario={comentario} />
+          </TouchableOpacity>
+        )}
         keyExtractor={(item, index) => index.toString()}
       />
-      <Button
-        buttonStyle={styles.btnAddComentario}
-        titleStyle={styles.btnTitleAddComentario}
-        title="Añadir reserva"
-        icon={{
-          type: "material-community",
-          name: "square-edit-outline",
-          color: "#00a680"
-        }}
-        onPress={() =>
-          navigation.navigate("AddComentario", {
-            idRestaurant: idRestaurant
-          })
-        }
-      />
-
+      <View style={{ flex: 1, flexDirection: "row" }}>
+        <View style={{ flex: 1 }}>
+          <Button
+            buttonStyle={styles.btnAddComentario}
+            titleStyle={styles.btnTitleAddComentario}
+            title="Añadir reserva"
+            icon={{
+              type: "material-community",
+              name: "square-edit-outline",
+              color: "#00a680"
+            }}
+            onPress={() =>
+              navigation.navigate("AddComentario", {
+                idRestaurant: idRestaurant,
+                setRecargarComentario: setRecargarComentario,
+                name: navigation.state.params.restaurant.item
+              })
+            }
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Button
+            buttonStyle={styles.btnAddComentario}
+            titleStyle={styles.btnTitleAddComentario}
+            title="Gastos"
+            icon={{
+              type: "material-community",
+              name: "cash",
+              color: "#00a680"
+            }}
+            onPress={() =>
+              navigation.navigate("VerGastos", {
+                idRestaurant: idRestaurant,
+                setRecargarComentario: setRecargarComentario,
+                name: navigation.state.params.restaurant.item
+              })
+            }
+          />
+        </View>
+      </View>
       <Calendar
         // Initially visible month. Default = Date()
-        current={"2020-02-07"}
+        //current={"2020-03-10"}
         // Minimum date that can be selected, dates before minDate will be grayed out. Default = undefined
-        minDate={"2019-01-10"}
+        minDate={"2020-01-10"}
         // Maximum date that can be selected, dates after maxDate will be grayed out. Default = undefined
         maxDate={"2030-05-30"}
         // Handler which gets executed on day press. Default = undefined
@@ -136,18 +186,18 @@ export default function Reservas(props) {
           console.log("month changed", month);
         }}
         // Hide month navigation arrows. Default = false
-        hideArrows={true}
+        // hideArrows={false}
         // Replace default arrows with custom ones (direction can be 'left' or 'right')
-        renderArrow={direction => <Arrow />}
+        //renderArrow={(direction) => (<Arrow />)}
         // Do not show days of other months in month page. Default = false
-        hideExtraDays={true}
+        hideExtraDays={false}
         // If hideArrows=false and hideExtraDays=false do not switch month when tapping on greyed out
         // day from another month that is visible in calendar page. Default = false
-        disableMonthChange={true}
+        //  disableMonthChange={false}
         // If firstDay=1 week starts from Monday. Note that dayNames and dayNamesShort should still start from Sunday.
         firstDay={1}
         // Hide day names. Default = false
-        hideDayNames={true}
+        hideDayNames={false}
         // Show week numbers to the left. Default = false
         showWeekNumbers={true}
         // Handler which gets executed when press arrow icon left. It receive a callback can go back month
@@ -155,9 +205,9 @@ export default function Reservas(props) {
         // Handler which gets executed when press arrow icon right. It receive a callback can go next month
         onPressArrowRight={addMonth => addMonth()}
         // Disable left arrow. Default = false
-        disableArrowLeft={true}
+        //   disableArrowLeft={true}
         // Disable right arrow. Default = false
-        disableArrowRight={true}
+        //  disableArrowRight={true}
         markingType={"period"}
         // Collection of dates that have to be colored in a special way. Default = {}
         markedDates={m}
@@ -188,6 +238,7 @@ function FunctComentario(props) {
           {fechaDesde.getFullYear()} -- {fechaHasta.getDate()}/
           {fechaHasta.getMonth() + 1}/{fechaHasta.getFullYear()}
         </Text>
+
         <Text style={styles.senia}>
           Seña: ${senia} ***** Pago: $ {pago}
         </Text>

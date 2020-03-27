@@ -9,15 +9,20 @@ import {
 } from "react-native";
 import { Image } from "react-native-elements";
 import * as firebase from "firebase";
+import "firebase/auth";
 //import firebase from "react-native-firebase";
 
 export default function List(props) {
   firebase.database().goOffline();
   const { restaurants, isLoading, handleLoadMore, navigation } = props;
+  const [userLogged, setUserLogged] = useState(false);
 
+  firebase.auth().onAuthStateChanged(user => {
+    user ? setUserLogged(true) : setUserLogged(false);
+  });
   return (
     <View>
-      {restaurants ? (
+      {userLogged && restaurants ? (
         <FlatList
           data={restaurants}
           renderItem={restaurant => (
@@ -31,7 +36,7 @@ export default function List(props) {
       ) : (
         <View style={styles.loaderRestaurants}>
           <ActivityIndicator size="large" />
-          <Text>Cargando restaurantes</Text>
+          <Text>Cargando Propiedades</Text>
         </View>
       )}
     </View>
@@ -73,7 +78,7 @@ function FooterList(props) {
   } else {
     return (
       <View style={styles.notFoundRestuants}>
-        <Text>No quedan restaurantes por cargar</Text>
+        <Text>No quedan propiedades por cargar</Text>
       </View>
     );
   }
