@@ -1,3 +1,4 @@
+// ESTA ES LA Q USO....
 import React, { useState, useEffect } from "react";
 import { View, Text, Button, StyleSheet } from "react-native";
 import ActionButton from "react-native-action-button";
@@ -5,6 +6,7 @@ import ActionButton from "react-native-action-button";
 
 import AddRestaurant from "./AddRestaurant";
 import List from "../app/components/List";
+
 import { firebaseApp } from "../app/utils/FireBase";
 import firebase from "firebase/app";
 import "firebase/auth";
@@ -22,6 +24,7 @@ export default function Restaurants(props) {
   const [isLoading, setIsLoading] = useState(false);
   const [totalRestaurants, setTotalRestaurants] = useState(0);
   const [isReloadRestaurants, setIsReloadRestaurants] = useState(false);
+
   const limitRestaurants = 12;
 
   // firebase.database.setPersistance();

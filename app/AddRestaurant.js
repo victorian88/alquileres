@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Toast from "react-native-easy-toast";
-import Loading from "../app/components/loading";
+import Loading from "../components/loading";
 import AddRestaurantForm from "../app/components/AddRestaurantForm";
 export default function AddRestaurant(props) {
   const { navigation } = props;
@@ -19,7 +19,7 @@ export default function AddRestaurant(props) {
       />
 
       <Toast ref={toastRef} position="center" opacity={0.5} />
-      <Loading isVisible={isLoading} text="Creando Restaurante" />
+      <Loading isVisible={isLoading} text="Creando Propiedad" />
     </View>
   );
 }
